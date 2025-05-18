@@ -49,8 +49,6 @@ public:
     void delete_subtree(Node* node);
     ~BinarySearchTree();
 
-    void clear(Node *node);
-    Node* copy_nodes(Node *node, Node *parent);
     size_t compute_height(Node *n) const;
 
     //! \brief Итератор бинарного дерева поиска
@@ -105,8 +103,6 @@ public:
     void insert(const Key &key, const Value &value);
     //! Удалить все элементы с ключем key
     void erase(const Key &key);
-    void insert_iterator(const Key& key, const Value& value);
-    void erase_iterator(const Key& key);
     //! Найти первый элемент в дереве, равный ключу key
     ConstIterator find(const Key &key) const;
     //! Найти первый элемент в дереве, равный ключу key

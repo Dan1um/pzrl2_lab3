@@ -12,7 +12,7 @@ bool BinarySearchTree::Node::operator==(const Node& other) const {
 
 void BinarySearchTree::Node::output_node_tree() const {
     if (left) left->output_node_tree();
-    std::cout << "[" << keyValuePair.first << ": " << keyValuePair.second << "] ";
+    std::cout << (color == RED ? "[R] " : "[B] ") << keyValuePair.first << " : " << keyValuePair.second << std::endl;
     if (right) right->output_node_tree();
 }
 
@@ -309,90 +309,6 @@ bool BinarySearchTree::ConstIterator::operator!=(const ConstIterator& other) con
     return _node != other._node;
 }
 
-// LLRB Tree implementation !!!!!!!!!
-void BinarySearchTree::insert_iterator(const Key& key, const Value& value) {
-    if (!_root) {
-        _root = new Node(key, value);
-        _size = 1;
-        return;
-    }
-
-    Node* current = _root;
-    Node* parent = nullptr;
-    
-    while (current) {
-        parent = current;
-        if (key < current->keyValuePair.first) {
-            current = current->left;
-        } else if (key > current->keyValuePair.first) {
-            current = current->right;
-        } else {
-            // Key already exists, update value
-            current->keyValuePair.second = value;
-            return;
-        }
-    }
-    
-    if (key < parent->keyValuePair.first) {
-        parent->left = new Node(key, value, parent);
-    } else {
-        parent->right = new Node(key, value, parent);
-    }
-    _size++;
-}
-
-void BinarySearchTree::erase_iterator(const Key& key) {
-    Node* node = _root;
-    Node* parent = nullptr;
-    
-    // Find the node to delete
-    while (node && node->keyValuePair.first != key) {
-        parent = node;
-        if (key < node->keyValuePair.first) {
-            node = node->left;
-        } else {
-            node = node->right;
-        }
-    }
-    
-    if (!node) return; // Key not found
-    
-    _size--;
-    
-    // Case 1: Node has two children
-    if (node->left && node->right) {
-        // Find inorder successor (leftmost in right subtree)
-        Node* successor = node->right;
-        while (successor->left) {
-            successor = successor->left;
-        }
-        
-        // Copy successor's data to node
-        node->keyValuePair = successor->keyValuePair;
-        
-        // Now delete the successor (which has at most one child)
-        node = successor;
-        parent = node->parent;
-    }
-    
-    // Case 2: Node has one child or no children
-    Node* child = node->left ? node->left : node->right;
-    
-    if (child) {
-        child->parent = parent;
-    }
-    
-    if (!parent) {
-        _root = child;
-    } else if (node == parent->left) {
-        parent->left = child;
-    } else {
-        parent->right = child;
-    }
-    
-    delete node;
-}
-
 BinarySearchTree::ConstIterator BinarySearchTree::find(const Key& key) const {
     Node* current = _root;
     while (current) {
@@ -536,4 +452,78 @@ void BinarySearchTree::output_tree() {
         _root->output_node_tree();
     }
     std::cout << std::endl;
+}
+size_t BinarySearchTree::max_height() const {
+    return compute_height(_root);
+}
+
+size_t BinarySearchTree::compute_height(Node* node) const {
+    if (!node) return 0;
+    size_t left_height = compute_height(node->left);
+    size_t right_height = compute_height(node->right);
+    return 1 + std::max(left_height, right_height);
+}
+
+int main() {
+    BinarySearchTree tree;
+
+    // Вставка элементов
+    tree.insert(50, 1.1);
+    tree.insert(30, 2.2);
+    tree.insert(70, 3.3);
+    tree.insert(20, 4.4);
+    tree.insert(40, 5.5);
+    tree.insert(60, 6.6);
+    tree.insert(80, 7.7);
+
+    std::cout << "Дерево после LLRB-вставки:\n";
+    tree.output_tree();
+
+    std::cout << "\nДерево после итеративной вставки:\n";
+    tree.output_tree();
+
+    // Обход через обычный итератор
+    std::cout << "\nОбход дерева (Iterator):\n";
+    for (auto it = tree.begin(); it != tree.end(); ++it) {
+        std::cout << it->first << " -> " << it->second << "\n";
+    }
+
+    // Обход через константный итератор
+    std::cout << "\nОбход дерева (ConstIterator):\n";
+    for (auto it = tree.cbegin(); it != tree.cend(); ++it) {
+        std::cout << it->first << " -> " << it->second << "\n";
+    }
+
+    // Поиск
+    Key searchKey = 60;
+    auto it = tree.find(searchKey);
+    if (it != tree.end())
+        std::cout << "\n Найден ключ " << searchKey << ": " << it->second << "\n";
+    else
+        std::cout << "\nКлюч " << searchKey << " не найден\n";
+
+    // Минимальный и максимальный элемент
+    std::cout << "\nMin: " << tree.min()->first << " -> " << tree.min()->second << "\n";
+    std::cout << "Max: " << tree.max()->first << " -> " << tree.max()->second << "\n";
+
+    // Удаление узлов
+    tree.erase(30);
+
+    std::cout << "\nПосле удаления 30 и 25:\n";
+    tree.output_tree();
+
+    // Высота дерева
+    std::cout << "\nВысота дерева: " << tree.max_height() << "\n";
+
+    // Размер дерева
+    std::cout << "Размер дерева: " << tree.size() << "\n";
+
+    // Диапазон с ключом
+    std::cout << "\nДиапазон ключа 40:\n";
+    auto range = tree.equalRange(40);
+    for (auto it = range.first; it != range.second; ++it) {
+        std::cout << it->first << " -> " << it->second << "\n";
+    }
+
+    return 0;
 }
